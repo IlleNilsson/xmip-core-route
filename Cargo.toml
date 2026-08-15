@@ -2,7 +2,7 @@
 name = "xmip-route"
 version = "0.1.0"
 edition = "2024"
-license = "MIT"
+license = "AGPL-3.0-or-later"
 repository = "https://github.com/IlleNilsson/xmip-route"
 description = "Xmip publication, subscriptions and routing decisions."
 
