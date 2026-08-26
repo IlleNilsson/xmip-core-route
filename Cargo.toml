@@ -2,13 +2,16 @@
 [workspace]
 
 [package]
-name = "xmip-route"
+name = "xmip-core-route"
 version = "0.1.0"
 edition = "2024"
 license = "AGPL-3.0-or-later"
-repository = "https://github.com/IlleNilsson/xmip-route"
-description = "Xmip publication, subscriptions and routing decisions."
+repository = "https://github.com/IlleNilsson/xmip-core-route"
+description = "Xmip publication, subscription matching and dispatch."
 
 [dependencies]
-xmip-message = { git = "https://github.com/IlleNilsson/xmip-message", rev = "e7967fc12dcc21197e8cc468b23210b244d83537" }
-xmip-contract = { git = "https://github.com/IlleNilsson/xmip-contract", rev = "8de0c03a12d9fc038a2a521bea164533643479b3" }
+serde = { version = "1", features = ["derive"] }
+xmip-context = { package = "xmip-core-context", git = "https://github.com/IlleNilsson/xmip-core-context", branch = "main" }
+
+[dev-dependencies]
+toml = "0.9"
