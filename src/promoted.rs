@@ -73,4 +73,3 @@ impl Promoted {
         self.values.len()
     }
 }
-

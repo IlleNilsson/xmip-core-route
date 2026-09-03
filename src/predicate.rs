@@ -18,12 +18,29 @@ use crate::{Promoted, Value};
 #[serde(rename_all = "kebab-case")]
 pub enum Predicate {
     /// The property was promoted at all, whatever it says.
-    Exists { property: String },
-    Equals { property: String, value: Value },
-    NotEquals { property: String, value: Value },
-    GreaterThan { property: String, value: Value },
-    LessThan { property: String, value: Value },
-    StartsWith { property: String, prefix: String },
+    Exists {
+        property: String,
+    },
+    Equals {
+        property: String,
+        value: Value,
+    },
+    NotEquals {
+        property: String,
+        value: Value,
+    },
+    GreaterThan {
+        property: String,
+        value: Value,
+    },
+    LessThan {
+        property: String,
+        value: Value,
+    },
+    StartsWith {
+        property: String,
+        prefix: String,
+    },
     /// Every condition holds. An empty all holds, which is how a Subscription
     /// says "everything published here".
     All(Vec<Predicate>),
@@ -149,8 +166,8 @@ impl Predicate {
                 }
             }),
 
-            Self::GreaterThan { property, value } => {
-                compare(promoted, property, value, |actual| match order(actual, value) {
+            Self::GreaterThan { property, value } => compare(promoted, property, value, |actual| {
+                match order(actual, value) {
                     Some(std::cmp::Ordering::Greater) => Test::Pass,
                     Some(_) => Test::Fail(format!(
                         "{property} is {}, which is not over {}",
@@ -158,11 +175,11 @@ impl Predicate {
                         value.show()
                     )),
                     None => Test::Fail(format!("{property} cannot be ordered against a boolean")),
-                })
-            }
+                }
+            }),
 
-            Self::LessThan { property, value } => {
-                compare(promoted, property, value, |actual| match order(actual, value) {
+            Self::LessThan { property, value } => compare(promoted, property, value, |actual| {
+                match order(actual, value) {
                     Some(std::cmp::Ordering::Less) => Test::Pass,
                     Some(_) => Test::Fail(format!(
                         "{property} is {}, which is not under {}",
@@ -170,8 +187,8 @@ impl Predicate {
                         value.show()
                     )),
                     None => Test::Fail(format!("{property} cannot be ordered against a boolean")),
-                })
-            }
+                }
+            }),
 
             Self::StartsWith { property, prefix } => match promoted.get(property) {
                 None => Test::Fail(nothing_promoted(property)),
@@ -282,4 +299,3 @@ impl Test {
         }
     }
 }
-

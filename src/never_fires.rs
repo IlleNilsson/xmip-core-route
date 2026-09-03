@@ -39,4 +39,3 @@ pub fn never_satisfiable(promotable: &[&str], subscriptions: &[Subscription]) ->
 
     doomed
 }
-
