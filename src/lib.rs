@@ -44,7 +44,6 @@
 //! behaviour is that file's. `Subscriber` is this module's, and replaces a
 //! `destination: String` that encoded the same three cases as text.
 
-
 mod never_fires;
 mod predicate;
 mod promoted;
@@ -52,13 +51,12 @@ mod routing;
 mod subscription;
 mod value;
 
-pub use never_fires::{never_satisfiable, NeverFires};
+pub use never_fires::{NeverFires, never_satisfiable};
 pub use predicate::{Predicate, Test};
 pub use promoted::Promoted;
-pub use routing::{publish, Dispatch, Evaluation, Routing};
+pub use routing::{Dispatch, Evaluation, Routing, publish};
 pub use subscription::{Subscriber, Subscription};
 pub use value::Value;
-
 
 // The tests below stay here rather than moving beside each file. They exercise
 // the crate's public surface end to end — publish, predicates and the promoted
@@ -170,9 +168,11 @@ mod tests {
     fn the_subscription_states_the_type_and_the_text_is_read_as_it() {
         // Amount was promoted as the text "1500". The filter says integer, so
         // the comparison is numeric.
-        assert!(Predicate::greater_than("Amount", Value::Integer(900))
-            .test(&orders())
-            .passed());
+        assert!(
+            Predicate::greater_than("Amount", Value::Integer(900))
+                .test(&orders())
+                .passed()
+        );
 
         // Lexicographically "1500" is less than "900", which is the wrong
         // answer, and the reason the type belongs on the Subscription.
@@ -188,9 +188,11 @@ mod tests {
         let promoted = Promoted::new().set("OrderNo", "0012345");
 
         assert_eq!(promoted.get("OrderNo"), Some("0012345"));
-        assert!(Predicate::equals("OrderNo", Value::Text("0012345".into()))
-            .test(&promoted)
-            .passed());
+        assert!(
+            Predicate::equals("OrderNo", Value::Text("0012345".into()))
+                .test(&promoted)
+                .passed()
+        );
     }
 
     #[test]
@@ -205,9 +207,11 @@ mod tests {
 
     #[test]
     fn booleans_read_as_written() {
-        assert!(Predicate::equals("Urgent", Value::Boolean(true))
-            .test(&orders())
-            .passed());
+        assert!(
+            Predicate::equals("Urgent", Value::Boolean(true))
+                .test(&orders())
+                .passed()
+        );
     }
 
     #[test]
@@ -246,9 +250,11 @@ mod tests {
 
     #[test]
     fn starts_with_reads_the_text_as_text() {
-        assert!(Predicate::starts_with("Customer", "ACME-")
-            .test(&orders())
-            .passed());
+        assert!(
+            Predicate::starts_with("Customer", "ACME-")
+                .test(&orders())
+                .passed()
+        );
     }
 
     #[test]

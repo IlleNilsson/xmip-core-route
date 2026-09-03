@@ -65,4 +65,3 @@ pub(crate) fn coerce(promoted: &str, wanted: &Value, property: &str) -> Result<V
         },
     }
 }
-

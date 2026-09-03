@@ -102,4 +102,3 @@ pub fn publish(promoted: &Promoted, subscriptions: &[Subscription]) -> Routing {
             .collect(),
     }
 }
-
