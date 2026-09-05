@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-use xmip_context::{ContextValue, MessageContext};
+use context::{ContextValue, MessageContext};
 
 /// The promoted properties of one Message, as routing sees them.
 ///

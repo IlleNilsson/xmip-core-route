@@ -67,7 +67,7 @@ pub use value::Value;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use xmip_context::{ContextValue, MessageContext};
+    use context::{ContextValue, MessageContext};
 
     fn orders() -> Promoted {
         Promoted::new()
