@@ -11,7 +11,7 @@ description = "Xmip publication, subscription matching and dispatch."
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-xmip-context = { package = "xmip-core-context", git = "https://github.com/IlleNilsson/xmip-core-context", branch = "main" }
+context = { package = "xmip-core-context", git = "https://github.com/IlleNilsson/xmip-core-context", branch = "main" }
 
 [dev-dependencies]
 toml = "0.9"
