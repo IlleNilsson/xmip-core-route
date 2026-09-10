@@ -48,6 +48,7 @@ mod never_fires;
 mod predicate;
 mod promoted;
 mod routing;
+mod source;
 mod subscription;
 mod value;
 
@@ -55,6 +56,7 @@ pub use never_fires::{NeverFires, never_satisfiable};
 pub use predicate::{Predicate, Test};
 pub use promoted::Promoted;
 pub use routing::{Dispatch, Evaluation, Routing, publish};
+pub use source::{CONTEXT, Source, SourceError, promote, split};
 pub use subscription::{Subscriber, Subscription};
 pub use value::Value;
 
