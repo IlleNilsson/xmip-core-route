@@ -54,7 +54,7 @@ mod value;
 
 pub use never_fires::{NeverFires, never_satisfiable};
 pub use predicate::{Predicate, Test};
-pub use promoted::Promoted;
+pub use promoted::{Promoted, text_of};
 pub use routing::{Dispatch, Evaluation, Routing, publish};
 pub use source::{CONTEXT, Source, SourceError, promote, split};
 pub use subscription::{Subscriber, Subscription};
