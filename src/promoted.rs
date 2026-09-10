@@ -46,10 +46,7 @@ impl Promoted {
             .fold(Self::new(), |set, (key, value)| match value {
                 ContextValue::Binary(_) => set,
                 ContextValue::Null => set.set(key, ""),
-                ContextValue::Text(text) => set.set(key, text.clone()),
-                ContextValue::Bool(flag) => set.set(key, flag.to_string()),
-                ContextValue::Integer(number) => set.set(key, number.to_string()),
-                ContextValue::Decimal(number) => set.set(key, number.to_string()),
+                other => set.set(key, text_of(other).unwrap_or_default()),
             })
     }
 
@@ -71,5 +68,37 @@ impl Promoted {
     #[must_use]
     pub fn len(&self) -> usize {
         self.values.len()
+    }
+}
+
+/// A context value as the text a filter compares, the one rendering every
+/// route technology uses (ADR-0044): text as it is, a boolean and a number as
+/// they are written. `None` for Null and for Binary, which have no text that
+/// would be right often enough to be worth being wrong the rest of the time.
+#[must_use]
+pub fn text_of(value: &ContextValue) -> Option<String> {
+    match value {
+        ContextValue::Text(text) => Some(text.clone()),
+        ContextValue::Bool(flag) => Some(flag.to_string()),
+        ContextValue::Integer(number) => Some(number.to_string()),
+        ContextValue::Decimal(number) => Some(number.to_string()),
+        ContextValue::Null | ContextValue::Binary(_) => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn text_of_renders_what_a_filter_compares_and_declines_bytes_and_null() {
+        assert_eq!(
+            text_of(&ContextValue::Text("Order".into())).as_deref(),
+            Some("Order")
+        );
+        assert_eq!(text_of(&ContextValue::Bool(true)).as_deref(), Some("true"));
+        assert_eq!(text_of(&ContextValue::Integer(12)).as_deref(), Some("12"));
+        assert_eq!(text_of(&ContextValue::Null), None);
+        assert_eq!(text_of(&ContextValue::Binary(vec![1, 2])), None);
     }
 }

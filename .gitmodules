@@ -1,0 +1,24 @@
+[submodule "xmip-core-route-content"]
+	path = content
+	url = https://github.com/IlleNilsson/xmip-core-route-content.git
+[submodule "xmip-core-route-context"]
+	path = context
+	url = https://github.com/IlleNilsson/xmip-core-route-context.git
+[submodule "xmip-core-route-contract"]
+	path = contract
+	url = https://github.com/IlleNilsson/xmip-core-route-contract.git
+[submodule "xmip-core-route-expression"]
+	path = expression
+	url = https://github.com/IlleNilsson/xmip-core-route-expression.git
+[submodule "xmip-core-route-header"]
+	path = header
+	url = https://github.com/IlleNilsson/xmip-core-route-header.git
+[submodule "xmip-core-route-metadata"]
+	path = metadata
+	url = https://github.com/IlleNilsson/xmip-core-route-metadata.git
+[submodule "xmip-core-route-party"]
+	path = party
+	url = https://github.com/IlleNilsson/xmip-core-route-party.git
+[submodule "xmip-core-route-regex"]
+	path = regex
+	url = https://github.com/IlleNilsson/xmip-core-route-regex.git
