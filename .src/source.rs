@@ -1,7 +1,9 @@
 //! Where a Subscription's filter reads from — the route technologies.
 //!
 //! A filter names properties. A property with no prefix is a context value,
-//! promoted as [`Promoted::from_context`] always has. A property with one —
+//! read through [`crate::routable`] exactly as `context:` reads it: missing
+//! and `Null` are absent, bytes are refused (ADR-0046, amended 2026-09-24).
+//! A property with one —
 //! `content:order.total`, `header:content-type`, `metadata:generation`,
 //! `party:sender`, `contract:name`, `expression:over-limit`,
 //! `regex:invoice-number` — is read by the technology of that name, and the
@@ -12,7 +14,7 @@
 
 use message::Message;
 
-use crate::Promoted;
+use crate::{Promoted, routable};
 
 /// The prefix a property carries when a technology reads it.
 const SEPARATOR: char = ':';
@@ -79,12 +81,13 @@ pub fn split(property: &str) -> (&str, &str) {
 }
 
 /// Promote every property the filters name, each from the source whose
-/// technology it carries. Context is read from the Message itself when no
-/// source claims it, so a set of sources may be empty and a filter over
-/// context alone still works.
+/// technology it carries. Context is read from the Message itself, through
+/// [`routable`], when no source claims it, so a set of sources may be empty
+/// and a filter over context alone still works.
 ///
 /// # Errors
-/// A property names a technology no source provides, or a source refused it.
+/// A property names a technology no source provides, a source refused it, or
+/// it names a context value that holds bytes.
 pub fn promote(
     message: &Message,
     sources: &[&dyn Source],
@@ -100,7 +103,8 @@ pub fn promote(
 
         let value = match source {
             Some(source) => source.read(message, name)?,
-            None if technology == CONTEXT => continue,
+            None if technology == CONTEXT => routable(name, message.context().get(name))
+                .map_err(|reason| SourceError::new(CONTEXT, name, reason))?,
             None => {
                 return Err(SourceError::new(
                     technology,
@@ -121,6 +125,7 @@ pub fn promote(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{Predicate, Value};
     use context::{ContextValue, MessageContext};
     use message::MessageTreatment;
     use xcore::MessageId;
@@ -177,6 +182,39 @@ mod tests {
 
         let none = promote(&message(), &[], &["MessageType"]).expect("context alone");
         assert_eq!(none.get("MessageType"), Some("Order"));
+    }
+
+    #[test]
+    fn a_bare_property_reads_missing_and_null_as_absent_and_refuses_bytes() {
+        let context = MessageContext::new()
+            .with_value("MessageType", ContextValue::Text("Order".into()))
+            .with_value("Note", ContextValue::Null)
+            .with_value("Blob", ContextValue::Binary(vec![0, 1, 2]));
+        let message = Message::received(
+            MessageId::new(2),
+            Vec::new(),
+            context,
+            MessageTreatment::default(),
+        );
+
+        let promoted =
+            promote(&message, &[], &["MessageType", "Note", "Region"]).expect("readable");
+        assert_eq!(promoted.get("MessageType"), Some("Order"));
+        assert_eq!(promoted.get("Note"), None);
+        assert_eq!(promoted.get("Region"), None);
+        assert!(Predicate::exists("MessageType").test(&promoted).passed());
+        assert!(!Predicate::exists("Note").test(&promoted).passed());
+        assert!(!Predicate::exists("Region").test(&promoted).passed());
+        assert!(
+            !Predicate::equals("Note", Value::Text(String::new()))
+                .test(&promoted)
+                .passed()
+        );
+
+        let refused = promote(&message, &[], &["Blob"]).expect_err("bytes");
+        assert_eq!(refused.technology, "context");
+        assert_eq!(refused.property, "Blob");
+        assert!(refused.reason.contains("3 bytes"));
     }
 
     #[test]
