@@ -4,7 +4,7 @@
 //! read through [`crate::routable`] exactly as `context:` reads it: missing
 //! and `Null` are absent, bytes are refused (ADR-0046, amended 2026-09-24).
 //! A property with one —
-//! `content:order.total`, `header:content-type`, `metadata:generation`,
+//! `content:order.total`, `header:http.content-type`, `metadata:generation`,
 //! `party:sender`, `contract:name`, `expression:over-limit`,
 //! `regex:invoice-number` — is read by the technology of that name, and the
 //! eight technologies are the eight ways a Message can be asked. ADR-0046.
