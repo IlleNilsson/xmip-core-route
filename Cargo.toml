@@ -16,6 +16,7 @@ path = ".src/lib.rs"
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 context = { package = "xmip-core-context", git = "https://github.com/IlleNilsson/xmip-core-context", branch = "main" }
+xcore = { package = "xmip-core", git = "https://github.com/IlleNilsson/xmip-core", branch = "main" }
 # A route technology reads the Message itself — content, sections, generation —
 # so the source trait takes one (ADR-0046).
 message = { package = "xmip-core-message", git = "https://github.com/IlleNilsson/xmip-core-message", branch = "main" }
@@ -25,7 +26,6 @@ path = { package = "xmip-core-path", git = "https://github.com/IlleNilsson/xmip-
 
 [dev-dependencies]
 toml = "0.9"
-xcore = { package = "xmip-core", git = "https://github.com/IlleNilsson/xmip-core", branch = "main" }
 
 [profile.dev.package."*"]
 opt-level = 3

@@ -6,8 +6,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-use context::ContextValue;
 use path::expression::Names;
+use xcore::ScalarValue;
 
 /// The promoted properties of one Message, as routing sees them.
 ///
@@ -79,10 +79,10 @@ impl Names for Promoted {
 ///
 /// # Errors
 /// The value is `Binary`.
-pub fn routable(key: &str, value: Option<&ContextValue>) -> Result<Option<String>, String> {
+pub fn routable(key: &str, value: Option<&ScalarValue>) -> Result<Option<String>, String> {
     match value {
-        None | Some(ContextValue::Null) => Ok(None),
-        Some(ContextValue::Binary(bytes)) => Err(format!(
+        None | Some(ScalarValue::Null) => Ok(None),
+        Some(ScalarValue::Binary(bytes)) => Err(format!(
             "{key} holds {} bytes, and bytes are not routable as text",
             bytes.len()
         )),
@@ -97,13 +97,13 @@ mod tests {
     #[test]
     fn routable_reads_missing_and_null_as_absent_and_refuses_bytes() {
         assert_eq!(routable("Region", None), Ok(None));
-        assert_eq!(routable("Note", Some(&ContextValue::Null)), Ok(None));
+        assert_eq!(routable("Note", Some(&ScalarValue::Null)), Ok(None));
         assert_eq!(
-            routable("Amount", Some(&ContextValue::Integer(1500))),
+            routable("Amount", Some(&ScalarValue::Integer(1500))),
             Ok(Some("1500".into()))
         );
         assert_eq!(
-            routable("Blob", Some(&ContextValue::Binary(vec![0, 1, 2]))),
+            routable("Blob", Some(&ScalarValue::Binary(vec![0, 1, 2]))),
             Err("Blob holds 3 bytes, and bytes are not routable as text".into())
         );
     }
