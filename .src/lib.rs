@@ -51,16 +51,18 @@
 //! behaviour is that file's. `Subscriber` is this module's, and replaces a
 //! `destination: String` that encoded the same three cases as text.
 
+mod gathering;
 mod never_fires;
 mod promoted;
 mod routing;
 mod source;
 mod subscription;
 
+pub use gathering::Gathering;
 pub use never_fires::{NeverFires, never_satisfiable};
-pub use promoted::{Promoted, routable, text_of};
+pub use promoted::{Promoted, routable};
 pub use routing::{Dispatch, Evaluation, Routing, publish};
-pub use source::{CONTEXT, Source, SourceError, promote, split};
+pub use source::{CONTEXT, Reading, Source, SourceError, split};
 pub use subscription::{Subscriber, Subscription};
 
 // The tests below stay here rather than moving beside each file. They exercise
@@ -276,13 +278,25 @@ mod tests {
             .with_value("Amount", ContextValue::Integer(1500))
             .with_value("Urgent", ContextValue::Bool(true))
             .with_value("Blob", ContextValue::Binary(vec![0, 1, 2]));
+        let message = message::Message::received(
+            xcore::MessageId::new(1),
+            Vec::new(),
+            context,
+            message::MessageTreatment::default(),
+        );
 
-        let promoted = Promoted::from_context(&context);
+        let promoted = Gathering::new(&[], &["OrderNo", "Amount", "Urgent"])
+            .promote(&message)
+            .expect("readable");
 
         assert_eq!(promoted.get("OrderNo"), Some("0012345"));
         assert_eq!(promoted.get("Amount"), Some("1500"));
         assert_eq!(promoted.get("Urgent"), Some("true"));
-        assert_eq!(promoted.get("Blob"), None, "bytes are not routable as text");
+        assert_eq!(
+            promoted.get("Blob"),
+            None,
+            "no filter named it, so it is not read"
+        );
     }
 
     #[test]

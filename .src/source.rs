@@ -11,12 +11,14 @@
 //! ADR-0046; the eighth, `expression`, went when a filter became an
 //! expression itself (ADR-0066).
 //!
-//! The capability owns the split and the gathering; a technology owns one
-//! reading. Nothing here knows what any prefix means.
+//! A technology compiles the name it is given once, when configuration is
+//! read, and the compiled [`Reading`] answers every Message after that
+//! without parsing it again (ADR-0046, amended 2026-09-27). The capability
+//! owns the split and the gathering ([`crate::Gathering`]); a technology owns
+//! one reading. Nothing here knows what any prefix means.
 
 use message::Message;
-
-use crate::{Promoted, routable};
+use path::Content;
 
 /// The prefix a property carries when a technology reads it.
 const SEPARATOR: char = ':';
@@ -24,21 +26,36 @@ const SEPARATOR: char = ':';
 /// The technology a property with no prefix belongs to.
 pub const CONTEXT: &str = "context";
 
-/// A route technology: reads named values from a Message for the filter.
+/// A route technology: compiles the names a filter reads from a Message.
 pub trait Source: Send + Sync {
     /// The manifest leaf, and the prefix a property carries: `content`,
     /// `header`, `metadata`, `party`, `contract`, `regex`, or
     /// `context` for the one that reads what the others do not.
     fn technology(&self) -> &'static str;
 
-    /// The value of `name` for this Message — the part after the prefix —
-    /// or `None` when the Message has no such thing. A filter treats `None`
-    /// as nothing promoted, which is a decline with a reason, not an error.
+    /// `name` — the part after the prefix — compiled, once.
     ///
     /// # Errors
-    /// The name is not one this technology can read, or the Message's content
-    /// cannot be read the way the name asks.
-    fn read(&self, message: &Message, name: &str) -> Result<Option<String>, SourceError>;
+    /// The name is not one this technology can read, with the reason.
+    fn compile(&self, name: &str) -> Result<Box<dyn Reading>, String>;
+}
+
+/// One compiled name, read from every Message.
+pub trait Reading: Send + Sync {
+    /// The value for `message`, or `None` when the Message has no such thing.
+    /// A filter treats `None` as nothing promoted, which is a decline with a
+    /// reason, not an error. `content` is the first section's, parsed at most
+    /// once per form for every reading of the Message; `None` when the
+    /// Message has no section.
+    ///
+    /// # Errors
+    /// The Message's content or context cannot be read the way the name
+    /// asks, with the reason.
+    fn read(
+        &self,
+        message: &Message,
+        content: Option<&Content<'_>>,
+    ) -> Result<Option<String>, String>;
 }
 
 /// Why a source could not answer a property.
@@ -82,86 +99,9 @@ pub fn split(property: &str) -> (&str, &str) {
     }
 }
 
-/// Promote every property the filters name, each from the source whose
-/// technology it carries. Context is read from the Message itself, through
-/// [`routable`], when no source claims it, so a set of sources may be empty
-/// and a filter over context alone still works.
-///
-/// # Errors
-/// A property names a technology no source provides, a source refused it, or
-/// it names a context value that holds bytes.
-pub fn promote(
-    message: &Message,
-    sources: &[&dyn Source],
-    properties: &[&str],
-) -> Result<Promoted, SourceError> {
-    let mut promoted = Promoted::from_context(message.context());
-
-    for property in properties {
-        let (technology, name) = split(property);
-        let source = sources
-            .iter()
-            .find(|source| source.technology() == technology);
-
-        let value = match source {
-            Some(source) => source.read(message, name)?,
-            None if technology == CONTEXT => routable(name, message.context().get(name))
-                .map_err(|reason| SourceError::new(CONTEXT, name, reason))?,
-            None => {
-                return Err(SourceError::new(
-                    technology,
-                    *property,
-                    "no route technology of that name is loaded",
-                ));
-            }
-        };
-
-        if let Some(value) = value {
-            promoted = promoted.set(*property, value);
-        }
-    }
-
-    Ok(promoted)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use context::{ContextValue, MessageContext};
-    use message::MessageTreatment;
-    use path::expression::Expression;
-    use xcore::MessageId;
-
-    struct Counting;
-
-    impl Source for Counting {
-        fn technology(&self) -> &'static str {
-            "metadata"
-        }
-
-        fn read(&self, message: &Message, name: &str) -> Result<Option<String>, SourceError> {
-            match name {
-                "generation" => Ok(Some(message.generation().to_string())),
-                "nothing" => Ok(None),
-                other => Err(SourceError::new(
-                    "metadata",
-                    other,
-                    "not a thing a Message has",
-                )),
-            }
-        }
-    }
-
-    fn message() -> Message {
-        let context =
-            MessageContext::new().with_value("MessageType", ContextValue::Text("Order".into()));
-        Message::received(
-            MessageId::new(1),
-            Vec::new(),
-            context,
-            MessageTreatment::default(),
-        )
-    }
 
     #[test]
     fn a_property_without_a_prefix_is_context_and_with_one_is_its_technology() {
@@ -171,67 +111,8 @@ mod tests {
     }
 
     #[test]
-    fn context_is_promoted_with_no_source_and_a_technology_adds_what_it_reads() {
-        let sources: [&dyn Source; 1] = [&Counting];
-        let promoted = promote(
-            &message(),
-            &sources,
-            &["MessageType", "metadata:generation"],
-        )
-        .expect("both readable");
-        assert_eq!(promoted.get("MessageType"), Some("Order"));
-        assert_eq!(promoted.get("metadata:generation"), Some("0"));
-
-        let none = promote(&message(), &[], &["MessageType"]).expect("context alone");
-        assert_eq!(none.get("MessageType"), Some("Order"));
-    }
-
-    #[test]
-    fn a_bare_property_reads_missing_and_null_as_absent_and_refuses_bytes() {
-        let context = MessageContext::new()
-            .with_value("MessageType", ContextValue::Text("Order".into()))
-            .with_value("Note", ContextValue::Null)
-            .with_value("Blob", ContextValue::Binary(vec![0, 1, 2]));
-        let message = Message::received(
-            MessageId::new(2),
-            Vec::new(),
-            context,
-            MessageTreatment::default(),
-        );
-
-        let promoted =
-            promote(&message, &[], &["MessageType", "Note", "Region"]).expect("readable");
-        assert_eq!(promoted.get("MessageType"), Some("Order"));
-        assert_eq!(promoted.get("Note"), None);
-        assert_eq!(promoted.get("Region"), None);
-        let holds = |text: &str| {
-            Expression::parse(text)
-                .expect("compiles")
-                .evaluate(&promoted)
-                .holds()
-        };
-        assert!(holds("exists MessageType"));
-        assert!(!holds("exists Note"));
-        assert!(!holds("exists Region"));
-        assert!(!holds("Note = ''"));
-
-        let refused = promote(&message, &[], &["Blob"]).expect_err("bytes");
-        assert_eq!(refused.technology, "context");
-        assert_eq!(refused.property, "Blob");
-        assert!(refused.reason.contains("3 bytes"));
-    }
-
-    #[test]
-    fn nothing_read_is_nothing_promoted_and_a_missing_technology_is_an_error() {
-        let sources: [&dyn Source; 1] = [&Counting];
-        let promoted = promote(&message(), &sources, &["metadata:nothing"]).expect("readable");
-        assert_eq!(promoted.get("metadata:nothing"), None);
-
-        let missing = promote(&message(), &sources, &["party:sender"]).expect_err("no party");
-        assert_eq!(missing.technology, "party");
-        assert!(missing.to_string().contains("no route technology"));
-
-        let refused = promote(&message(), &sources, &["metadata:colour"]).expect_err("refused");
-        assert_eq!(refused.property, "colour");
+    fn a_source_error_names_the_technology_and_the_property() {
+        let error = SourceError::new("regex", "OrderNo:(", "does not compile");
+        assert_eq!(error.to_string(), "regex:OrderNo:(: does not compile");
     }
 }
