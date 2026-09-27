@@ -26,6 +26,20 @@ The route technologies are `content`, `context`, `contract`, `header`,
 (ADR-0046). `expression` is retired: a filter is itself the expression
 (ADR-0046, amended 2026-09-26).
 
+**Compiled once, read per Message.** A `Gathering` is built once from the
+Subscriptions and the route technologies loaded (`Gathering::of`): it takes
+the names every filter uses, each once, and has each `Source` compile its
+name into a `Reading` — a pattern, a path through the path engine, a context
+key built. `Gathering::promote` then reads each compiled name from a Message
+into the `Promoted` set routing decides over, with the first section's
+content parsed at most once per form for all of them; nothing else of the
+Message is read, and no context value no filter names is rendered. A name
+that cannot be compiled — a prefix no loaded technology provides, a name its
+technology refuses — is kept as that refusal and refuses each Message at
+arrival, as before (ADR-0046, amended 2026-09-27). The tests hold it: a name
+compiles once and ten thousand Messages are read from it, each well under a
+millisecond on a debug build.
+
 A filter reads every value through one function, `routable`: a property the
 Message does not hold and a `Null` are absent, so `exists` fails and no
 comparison matches, not even with empty text; bytes are refused. `X` and
