@@ -74,8 +74,9 @@ pub use subscription::{Subscriber, Subscription};
 #[cfg(test)]
 mod tests {
     use super::*;
-    use context::{ContextValue, MessageContext};
+    use context::MessageContext;
     use path::expression::{Expression, Truth};
+    use xcore::ScalarValue;
 
     fn orders() -> Promoted {
         Promoted::new()
@@ -274,10 +275,10 @@ mod tests {
     #[test]
     fn promotion_arrives_from_context_as_text() {
         let context = MessageContext::new()
-            .with_value("OrderNo", ContextValue::Text("0012345".into()))
-            .with_value("Amount", ContextValue::Integer(1500))
-            .with_value("Urgent", ContextValue::Bool(true))
-            .with_value("Blob", ContextValue::Binary(vec![0, 1, 2]));
+            .with_value("OrderNo", ScalarValue::Text("0012345".into()))
+            .with_value("Amount", ScalarValue::Integer(1500))
+            .with_value("Urgent", ScalarValue::Bool(true))
+            .with_value("Blob", ScalarValue::Binary(vec![0, 1, 2]));
         let message = message::Message::received(
             xcore::MessageId::new(1),
             Vec::new(),

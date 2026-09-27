@@ -126,11 +126,12 @@ impl Gathering {
 mod tests {
     use super::*;
     use crate::Subscriber;
-    use context::{ContextValue, MessageContext};
+    use context::MessageContext;
     use message::MessageTreatment;
     use path::expression::Expression;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use xcore::MessageId;
+    use xcore::ScalarValue;
 
     /// Reads `metadata:generation`, counting how often it compiles a name.
     #[derive(Default)]
@@ -173,7 +174,7 @@ mod tests {
 
     fn message() -> Message {
         let context =
-            MessageContext::new().with_value("MessageType", ContextValue::Text("Order".into()));
+            MessageContext::new().with_value("MessageType", ScalarValue::Text("Order".into()));
         Message::received(
             MessageId::new(1),
             Vec::new(),
@@ -218,8 +219,8 @@ mod tests {
         );
 
         let context = MessageContext::new()
-            .with_value("MessageType", ContextValue::Text("Order".into()))
-            .with_value("Unused", ContextValue::Binary(vec![0, 1]));
+            .with_value("MessageType", ScalarValue::Text("Order".into()))
+            .with_value("Unused", ScalarValue::Binary(vec![0, 1]));
         let message = Message::received(
             MessageId::new(3),
             Vec::new(),
@@ -252,9 +253,9 @@ mod tests {
     #[test]
     fn a_bare_property_reads_missing_and_null_as_absent_and_refuses_bytes() {
         let context = MessageContext::new()
-            .with_value("MessageType", ContextValue::Text("Order".into()))
-            .with_value("Note", ContextValue::Null)
-            .with_value("Blob", ContextValue::Binary(vec![0, 1, 2]));
+            .with_value("MessageType", ScalarValue::Text("Order".into()))
+            .with_value("Note", ScalarValue::Null)
+            .with_value("Blob", ScalarValue::Binary(vec![0, 1, 2]));
         let message = Message::received(
             MessageId::new(2),
             Vec::new(),
