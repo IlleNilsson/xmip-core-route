@@ -7,9 +7,6 @@
 [submodule "xmip-core-route-contract"]
 	path = contract
 	url = https://github.com/IlleNilsson/xmip-core-route-contract.git
-[submodule "xmip-core-route-expression"]
-	path = expression
-	url = https://github.com/IlleNilsson/xmip-core-route-expression.git
 [submodule "xmip-core-route-header"]
 	path = header
 	url = https://github.com/IlleNilsson/xmip-core-route-header.git

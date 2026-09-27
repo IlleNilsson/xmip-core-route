@@ -7,9 +7,24 @@ destination and opens one Journey.
 
 Routing creates no new Message. Zero matches means no Journey and the Message
 goes to the DMQ; a re-publication is a new Publication, so a Journey stays a
-line. Subscriptions are artifacts written in TOML, loaded by
+line. Subscriptions are artifacts written in TOML in an Xmip Application
+(ADR-0064), loaded by
 `xmip-core-configure` and stored by `xmip-core-persist`; this crate replaces
 neither. Decision logic is not routing (ADR-0043).
+
+A Subscription's filter is one line of Xmip's expression language
+(`xmip-core-path`'s `expression`, ADR-0066) — `filter = "MessageType = 'Order' and
+not Amount > 1000 and header:http.x-channel = 'web'"` — compiled as the
+Application is read and decided from the compiled tree for every Message;
+this crate never parses it. The literal's spelling is the kind a promoted
+value is read as, and a value that is not there is *unknown* with its reason,
+never a silent false: only a filter that is true matches, and every decline
+says why.
+
+The route technologies are `content`, `context`, `contract`, `header`,
+`metadata`, `party` and `regex`, each reading the properties its prefix names
+(ADR-0046). `expression` is retired: a filter is itself the expression
+(ADR-0046, amended 2026-09-26).
 
 A filter reads every value through one function, `routable`: a property the
 Message does not hold and a `Null` are absent, so `exists` fails and no

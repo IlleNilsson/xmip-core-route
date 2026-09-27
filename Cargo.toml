@@ -19,7 +19,13 @@ context = { package = "xmip-core-context", git = "https://github.com/IlleNilsson
 # A route technology reads the Message itself — content, sections, generation —
 # so the source trait takes one (ADR-0046).
 message = { package = "xmip-core-message", git = "https://github.com/IlleNilsson/xmip-core-message", branch = "main" }
+# A filter is one line of Xmip's expression language, compiled once and
+# decided from its tree; the language is the path capability's (ADR-0066).
+path = { package = "xmip-core-path", git = "https://github.com/IlleNilsson/xmip-core-path", branch = "main" }
 
 [dev-dependencies]
 toml = "0.9"
 xcore = { package = "xmip-core", git = "https://github.com/IlleNilsson/xmip-core", branch = "main" }
+
+[profile.dev.package."*"]
+opt-level = 3

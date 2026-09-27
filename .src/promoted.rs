@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use context::{ContextValue, MessageContext};
+use path::expression::Names;
 
 /// The promoted properties of one Message, as routing sees them.
 ///
@@ -70,6 +71,18 @@ impl Promoted {
     #[must_use]
     pub fn len(&self) -> usize {
         self.values.len()
+    }
+}
+
+/// A filter reads its names here, and a name nothing promoted is unknown
+/// with that reason.
+impl Names for Promoted {
+    fn value(&self, name: &str) -> Option<&str> {
+        self.get(name)
+    }
+
+    fn absent(&self, name: &str) -> String {
+        format!("nothing promoted {name}")
     }
 }
 

@@ -5,20 +5,24 @@
 //! routing failure and suspends the Message; here it is [`Dispatch::Unroutable`]
 //! and the Message is kept for retention.
 
-use crate::{Promoted, Subscriber, Subscription, Test};
+use path::expression::Truth;
+
+use crate::{Promoted, Subscriber, Subscription};
 
 /// What one Subscription decided about one Message, and why.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Evaluation {
     pub subscription_id: String,
     pub destination: Subscriber,
-    pub outcome: Test,
+    /// What the filter decided: only *true* matches; *false* and *unknown*
+    /// carry the reason it declined (ADR-0066).
+    pub outcome: Truth,
 }
 
 impl Evaluation {
     #[must_use]
     pub const fn matched(&self) -> bool {
-        self.outcome.passed()
+        self.outcome.holds()
     }
 }
 
@@ -97,7 +101,7 @@ pub fn publish(promoted: &Promoted, subscriptions: &[Subscription]) -> Routing {
             .map(|subscription| Evaluation {
                 subscription_id: subscription.id.clone(),
                 destination: subscription.destination.clone(),
-                outcome: subscription.filter.test(promoted),
+                outcome: subscription.filter.evaluate(promoted),
             })
             .collect(),
     }

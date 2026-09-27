@@ -6,7 +6,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::Predicate;
+use path::expression::Expression;
 
 /// Who a matched Message goes to.
 ///
@@ -58,7 +58,9 @@ impl std::fmt::Display for Subscriber {
 pub struct Subscription {
     pub id: String,
     pub destination: Subscriber,
-    pub filter: Predicate,
+    /// One line of Xmip's expression language, compiled as it is read
+    /// (ADR-0066): a filter that does not compile refuses the document.
+    pub filter: Expression,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub required_contract: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -66,7 +68,7 @@ pub struct Subscription {
 }
 
 impl Subscription {
-    pub fn new(id: impl Into<String>, destination: Subscriber, filter: Predicate) -> Self {
+    pub fn new(id: impl Into<String>, destination: Subscriber, filter: Expression) -> Self {
         Self {
             id: id.into(),
             destination,
