@@ -4,10 +4,12 @@
 //! read through [`crate::routable`] exactly as `context:` reads it: missing
 //! and `Null` are absent, bytes are refused (ADR-0046, amended 2026-09-24).
 //! A property with one —
-//! `content:order.total`, `header:http.content-type`, `metadata:generation`,
-//! `party:sender`, `contract:name`, `expression:over-limit`,
-//! `regex:invoice-number` — is read by the technology of that name, and the
-//! eight technologies are the eight ways a Message can be asked. ADR-0046.
+//! `content:dot:order.total`, `header:http.content-type`,
+//! `metadata:generation`, `party:sender`, `contract:name`,
+//! `regex:OrderNo:<pattern>` — is read by the technology of that name, and
+//! the seven technologies are the seven ways a Message can be asked.
+//! ADR-0046; the eighth, `expression`, went when a filter became an
+//! expression itself (ADR-0066).
 //!
 //! The capability owns the split and the gathering; a technology owns one
 //! reading. Nothing here knows what any prefix means.
@@ -25,7 +27,7 @@ pub const CONTEXT: &str = "context";
 /// A route technology: reads named values from a Message for the filter.
 pub trait Source: Send + Sync {
     /// The manifest leaf, and the prefix a property carries: `content`,
-    /// `header`, `metadata`, `party`, `contract`, `expression`, `regex`, or
+    /// `header`, `metadata`, `party`, `contract`, `regex`, or
     /// `context` for the one that reads what the others do not.
     fn technology(&self) -> &'static str;
 
@@ -125,9 +127,9 @@ pub fn promote(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Predicate, Value};
     use context::{ContextValue, MessageContext};
     use message::MessageTreatment;
+    use path::expression::Expression;
     use xcore::MessageId;
 
     struct Counting;
@@ -202,14 +204,16 @@ mod tests {
         assert_eq!(promoted.get("MessageType"), Some("Order"));
         assert_eq!(promoted.get("Note"), None);
         assert_eq!(promoted.get("Region"), None);
-        assert!(Predicate::exists("MessageType").test(&promoted).passed());
-        assert!(!Predicate::exists("Note").test(&promoted).passed());
-        assert!(!Predicate::exists("Region").test(&promoted).passed());
-        assert!(
-            !Predicate::equals("Note", Value::Text(String::new()))
-                .test(&promoted)
-                .passed()
-        );
+        let holds = |text: &str| {
+            Expression::parse(text)
+                .expect("compiles")
+                .evaluate(&promoted)
+                .holds()
+        };
+        assert!(holds("exists MessageType"));
+        assert!(!holds("exists Note"));
+        assert!(!holds("exists Region"));
+        assert!(!holds("Note = ''"));
 
         let refused = promote(&message, &[], &["Blob"]).expect_err("bytes");
         assert_eq!(refused.technology, "context");

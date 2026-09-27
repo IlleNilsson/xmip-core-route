@@ -27,7 +27,7 @@ pub fn never_satisfiable(promotable: &[&str], subscriptions: &[Subscription]) ->
     let mut doomed = Vec::new();
 
     for subscription in subscriptions {
-        for name in subscription.filter.referenced_names() {
+        for name in subscription.filter.names() {
             if !promotable.contains(&name) {
                 doomed.push(NeverFires {
                     subscription_id: subscription.id.clone(),
