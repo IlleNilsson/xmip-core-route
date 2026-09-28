@@ -97,6 +97,18 @@ impl Gathering {
             .map(|gathered| gathered.property.as_str())
     }
 
+    /// Every property that did not compile, and why: a prefix no loaded
+    /// technology provides, or a name its technology refuses. A node that
+    /// starts with a gathering asks this and refuses to start while it
+    /// holds one (ADR-0066 clause 1); [`Gathering::promote`] refuses each
+    /// Message with the same reason wherever a gathering is used without
+    /// asking.
+    pub fn refusals(&self) -> impl Iterator<Item = &SourceError> {
+        self.gathered
+            .iter()
+            .filter_map(|gathered| gathered.reading.as_ref().err())
+    }
+
     /// Read every property from `message`. The first section's content is
     /// parsed at most once per form, whichever readings ask for it.
     ///
@@ -304,5 +316,33 @@ mod tests {
             .promote(&message())
             .expect_err("refused");
         assert_eq!(refused.property, "colour");
+    }
+
+    #[test]
+    fn what_did_not_compile_is_said_before_any_message_is_read() {
+        let counting = Counting::default();
+        let sources: [&dyn Source; 1] = [&counting];
+        let gathering = Gathering::new(
+            &sources,
+            &[
+                "MessageType",
+                "metadata:generation",
+                "metadata:colour",
+                "party:sender",
+            ],
+        );
+
+        let refused: Vec<(&str, &str)> = gathering
+            .refusals()
+            .map(|error| (error.technology.as_str(), error.property.as_str()))
+            .collect();
+
+        assert_eq!(refused, [("metadata", "colour"), ("party", "party:sender")]);
+        assert_eq!(
+            Gathering::new(&sources, &["MessageType"])
+                .refusals()
+                .count(),
+            0
+        );
     }
 }

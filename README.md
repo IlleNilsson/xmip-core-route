@@ -35,8 +35,10 @@ into the `Promoted` set routing decides over, with the first section's
 content parsed at most once per form for all of them; nothing else of the
 Message is read, and no context value no filter names is rendered. A name
 that cannot be compiled — a prefix no loaded technology provides, a name its
-technology refuses — is kept as that refusal and refuses each Message at
-arrival, as before (ADR-0046, amended 2026-09-27). The tests hold it: a name
+technology refuses — is kept as that refusal: `Gathering::refusals` says each
+before any Message is read, and a node refuses to start while there is one
+(ADR-0066 clause 1); a gathering used without asking refuses each Message at
+arrival with the same reason (ADR-0046, amended 2026-09-27). The tests hold it: a name
 compiles once and ten thousand Messages are read from it, each well under a
 millisecond on a debug build.
 
