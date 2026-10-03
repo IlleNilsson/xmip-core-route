@@ -6,7 +6,7 @@ a pure function over context rather than a query, and every match names a
 destination and opens one Journey.
 
 Routing creates no new Message. Zero matches means no Journey and the Message
-goes to the DMQ; a re-publication is a new Publication, so a Journey stays a
+goes to the Dead Message Queue; a re-publication is a new Publication, so a Journey stays a
 line. Subscriptions are artifacts written in TOML in an Xmip Application
 (ADR-0064), loaded by
 `xmip-core-configure` and stored by `xmip-core-persist`; this crate replaces
