@@ -141,7 +141,7 @@ mod tests {
         )];
         let routing = publish(&orders(), &subscriptions);
 
-        assert!(routing.destinations().is_empty());
+        assert_eq!(routing.destinations(), [] as [&Subscriber; 0]);
         assert_eq!(routing.dispatch(), Dispatch::Unroutable);
         assert!(routing.dispatch().retains());
     }
