@@ -48,7 +48,7 @@
 //!    order number with it.
 //!
 //! Merged from the platform repository's `src/route.rs` on 2026-08-26. The
-//! behaviour is that file's. `Subscriber` is this module's, and replaces a
+//! behavior is that file's. `Subscriber` is this module's, and replaces a
 //! `destination: String` that encoded the same three cases as text.
 
 mod gathering;
@@ -245,15 +245,15 @@ mod tests {
         let promotable = ["MessageType", "Amount", "Customer", "Urgent"];
         let subscriptions = vec![
             to("good", send_port("Billing"), "MessageType = 'Order'"),
-            // Regoin, not Region. Neither spelling is promoted.
-            to("typo", send_port("Nordics"), "Regoin = 'SE'"),
+            // Region misspelled on purpose. Neither spelling is promoted.
+            to("typo", send_port("Nordics"), "Regoin = 'SE'"), // spellchecker:disable-line
         ];
 
         let doomed = never_satisfiable(&promotable, &subscriptions);
 
         assert_eq!(doomed.len(), 1);
         assert_eq!(doomed[0].subscription_id, "typo");
-        assert_eq!(doomed[0].unknown_property, "Regoin");
+        assert_eq!(doomed[0].unknown_property, "Regoin"); // spellchecker:disable-line
     }
 
     #[test]

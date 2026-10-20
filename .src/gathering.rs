@@ -312,10 +312,10 @@ mod tests {
         assert_eq!(missing.technology, "party");
         assert!(missing.to_string().contains("no route technology"));
 
-        let refused = Gathering::new(&sources, &["metadata:colour"])
+        let refused = Gathering::new(&sources, &["metadata:color"])
             .promote(&message())
             .expect_err("refused");
-        assert_eq!(refused.property, "colour");
+        assert_eq!(refused.property, "color");
     }
 
     #[test]
@@ -327,7 +327,7 @@ mod tests {
             &[
                 "MessageType",
                 "metadata:generation",
-                "metadata:colour",
+                "metadata:color",
                 "party:sender",
             ],
         );
@@ -337,7 +337,7 @@ mod tests {
             .map(|error| (error.technology.as_str(), error.property.as_str()))
             .collect();
 
-        assert_eq!(refused, [("metadata", "colour"), ("party", "party:sender")]);
+        assert_eq!(refused, [("metadata", "color"), ("party", "party:sender")]);
         assert_eq!(
             Gathering::new(&sources, &["MessageType"])
                 .refusals()
