@@ -10,7 +10,11 @@ goes to the Dead Message Queue; a re-publication is a new Publication, so a Jour
 line. Subscriptions are artifacts written in TOML in an Xmip Application
 (ADR-0064), loaded by
 `xmip-core-configure` and stored by `xmip-core-persist`; this crate replaces
-neither. Decision logic is not routing (ADR-0043).
+neither. Decision logic is not routing (ADR-0043). A correlation set's keys — a
+Message Context value at a Receive Location, a Receive Port, a Work Process
+or a Send Port — are read through the same `Gathering` as a filter's names,
+compiled with them as the node starts (`xmip-core-runtime`'s `sequence`;
+ADR-0066, amendment 2026-10-22).
 
 A Subscription's filter is one line of Xmip's expression language
 (`xmip-core-path`'s `expression`, ADR-0066) — `filter = "MessageType = 'Order' and
