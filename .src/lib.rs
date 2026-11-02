@@ -246,14 +246,14 @@ mod tests {
         let subscriptions = vec![
             to("good", send_port("Billing"), "MessageType = 'Order'"),
             // Region misspelled on purpose. Neither spelling is promoted.
-            to("typo", send_port("Nordics"), "Regoin = 'SE'"), // spellchecker:disable-line
+            to("typo", send_port("Nordics"), "Regoin = 'SE'"),
         ];
 
         let doomed = never_satisfiable(&promotable, &subscriptions);
 
         assert_eq!(doomed.len(), 1);
         assert_eq!(doomed[0].subscription_id, "typo");
-        assert_eq!(doomed[0].unknown_property, "Regoin"); // spellchecker:disable-line
+        assert_eq!(doomed[0].unknown_property, "Regoin");
     }
 
     #[test]
