@@ -141,62 +141,31 @@ mod tests {
     use context::MessageContext;
     use message::MessageTreatment;
     use path::expression::Expression;
-    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::atomic::Ordering;
     use xcore::MessageId;
     use xcore::ScalarValue;
 
-    /// Reads `metadata:generation`, counting how often it compiles a name.
-    #[derive(Default)]
-    struct Counting(AtomicUsize);
-
-    struct Generation;
-
-    struct Nothing;
-
-    impl Source for Counting {
-        fn technology(&self) -> &'static str {
-            "metadata"
-        }
-
-        fn compile(&self, name: &str) -> Result<Box<dyn Reading>, String> {
-            self.0.fetch_add(1, Ordering::Relaxed);
-            match name {
-                "generation" => Ok(Box::new(Generation)),
-                "nothing" => Ok(Box::new(Nothing)),
-                _ => Err("not a thing a Message has".to_string()),
-            }
-        }
-    }
-
-    impl Reading for Generation {
-        fn read(
-            &self,
-            message: &Message,
-            _: Option<&Content<'_>>,
-        ) -> Result<Option<String>, String> {
-            Ok(Some(message.generation().to_string()))
-        }
-    }
-
-    impl Reading for Nothing {
-        fn read(&self, _: &Message, _: Option<&Content<'_>>) -> Result<Option<String>, String> {
-            Ok(None)
-        }
-    }
-
-    fn message() -> Message {
-        let context =
-            MessageContext::new().with_value("MessageType", ScalarValue::Text("Order".into()));
-        Message::received(
-            MessageId::new(1),
-            Vec::new(),
-            context,
-            MessageTreatment::default(),
-        )
-    }
+    #[path = "../../../tests/measured/counting.rs"]
+    mod counting;
+    use counting::{Counting, message};
 
     fn promote(sources: &[&dyn Source], properties: &[&str]) -> Result<Promoted, SourceError> {
         Gathering::new(sources, properties).promote(&message())
+    }
+
+    /// How long each read takes is the timing program's
+    /// (tests/measured).
+    #[test]
+    fn a_name_compiles_once_however_many_messages_read_it() {
+        let counting = Counting::default();
+        let sources: [&dyn Source; 1] = [&counting];
+        let gathering = Gathering::new(&sources, &["metadata:generation", "MessageType"]);
+        let message = message();
+        for _ in 0..10_000 {
+            let promoted = gathering.promote(&message).expect("readable");
+            assert_eq!(promoted.len(), 2);
+        }
+        assert_eq!(counting.0.load(Ordering::Relaxed), 1, "compiled once");
     }
 
     #[test]
@@ -243,23 +212,6 @@ mod tests {
             .promote(&message)
             .expect("unused bytes are never read");
         assert_eq!(promoted.names(), vec!["MessageType", "metadata:generation"]);
-    }
-
-    #[test]
-    fn a_name_compiles_once_and_is_read_from_every_message_in_microseconds() {
-        let counting = Counting::default();
-        let sources: [&dyn Source; 1] = [&counting];
-        let gathering = Gathering::new(&sources, &["metadata:generation", "MessageType"]);
-        let message = message();
-        let started = std::time::Instant::now();
-        for _ in 0..10_000 {
-            let promoted = gathering.promote(&message).expect("readable");
-            assert_eq!(promoted.len(), 2);
-        }
-        let each = started.elapsed() / 10_000;
-        assert_eq!(counting.0.load(Ordering::Relaxed), 1, "compiled once");
-        // Generous for a debug build under load; a millisecond is the defect.
-        assert!(each.as_micros() < 200, "{each:?} per Message");
     }
 
     #[test]
