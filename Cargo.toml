@@ -33,7 +33,7 @@ path = "tests/measured/main.rs"
 test = false
 
 [dev-dependencies]
-toml = "0.9"
+toml = "1"
 
 [profile.dev.package."*"]
 opt-level = 3
