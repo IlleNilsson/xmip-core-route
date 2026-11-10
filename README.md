@@ -53,4 +53,4 @@ comparison matches, not even with empty text; bytes are refused. `X` and
 amended 2026-09-24).
 
 `doc/architecture/runtime-model.md` sections 9 and 11 and ADR-0013 govern it;
-`architecture.xmip` carries the maturity.
+`architecture.toml` carries the maturity.
