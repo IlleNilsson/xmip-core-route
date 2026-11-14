@@ -1,8 +1,8 @@
 //! The stand-in source a gathering is tested with, and the Message it
 //! reads: what `gathering.rs`'s tests and the module's timing program both
-//! promote. Shared, not copied: `.src/gathering.rs`'s tests take it with
-//! `#[path]`, and the includer brings the route's and the Message's names
-//! into scope for it (`super::*`).
+//! promote. Shared, not copied: `.src/gathering.rs` takes it with
+//! `#[path]` for its tests, and the includer brings the route's and the
+//! Message's names into scope for it (`super`).
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 

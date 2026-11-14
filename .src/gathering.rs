@@ -134,20 +134,28 @@ impl Gathering {
     }
 }
 
+// Declared here, beside the file, and not in `tests`: a path from an
+// inline module passes through a directory named for it that does not
+// exist, which Windows forgives and Linux does not. It names the route's
+// and the Message's words from here (`super`).
+#[cfg(test)]
+#[path = "../tests/measured/counting.rs"]
+mod counting;
+#[cfg(test)]
+use {
+    context::MessageContext,
+    message::MessageTreatment,
+    xcore::{MessageId, ScalarValue},
+};
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::Subscriber;
-    use context::MessageContext;
-    use message::MessageTreatment;
     use path::expression::Expression;
     use std::sync::atomic::Ordering;
-    use xcore::MessageId;
-    use xcore::ScalarValue;
 
-    #[path = "../../../tests/measured/counting.rs"]
-    mod counting;
-    use counting::{Counting, message};
+    use super::counting::{Counting, message};
 
     fn promote(sources: &[&dyn Source], properties: &[&str]) -> Result<Promoted, SourceError> {
         Gathering::new(sources, properties).promote(&message())
