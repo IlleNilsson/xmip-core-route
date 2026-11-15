@@ -25,12 +25,22 @@ fn a_name_is_read_from_every_message_in_microseconds() {
     let sources: [&dyn Source; 1] = [&counting];
     let gathering = Gathering::new(&sources, &["metadata:generation", "MessageType"]);
     let message = message();
-    let started = std::time::Instant::now();
-    for _ in 0..10_000 {
-        let promoted = gathering.promote(&message).expect("readable");
-        assert_eq!(promoted.len(), 2);
-    }
-    let each = started.elapsed() / 10_000;
-    // Generous for a debug build under load; a millisecond is the defect.
-    assert!(each.as_micros() < 200, "{each:?} per Message");
+    // Each read timed, the fastest of five (`xcore::latency::spread`): a
+    // busy machine preempts some, a slower read slows every one. It waits
+    // on no wake, so no plain wake is measured beside it. Until 2026-11-15
+    // the ten thousand were timed together.
+    let each = (0..10_000)
+        .map(|_| {
+            let started = std::time::Instant::now();
+            let promoted = gathering.promote(&message).expect("readable");
+            let took = started.elapsed();
+            assert_eq!(promoted.len(), 2);
+            took
+        })
+        .collect();
+    let each = xcore::latency::spread("a promoted name read from a Message", each);
+    assert!(
+        each.fastest_of_five.as_micros() < 200,
+        "{each:?} per Message"
+    );
 }
