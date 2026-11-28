@@ -17,7 +17,8 @@ compiled with them as the node starts (`xmip-core-runtime`'s `sequence`;
 ADR-0066, amendment 2026-10-22).
 
 A Subscription's filter is one line of Xmip's expression language
-(`xmip-core-path`'s `expression`, ADR-0066) — `filter = "MessageType = 'Order' and
+(`xmip-core-expression`, a capability routing uses directly; ADR-0066,
+amendment 2026-11-28) — `filter = "MessageType = 'Order' and
 not Amount > 1000 and header:http.x-channel = 'web'"` — compiled as the
 Application is read and decided from the compiled tree for every Message;
 this crate never parses it. The literal's spelling is the kind a promoted

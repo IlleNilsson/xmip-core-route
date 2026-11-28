@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-use path::expression::Names;
+use expression::Names;
 use xcore::ScalarValue;
 
 /// The promoted properties of one Message, as routing sees them.

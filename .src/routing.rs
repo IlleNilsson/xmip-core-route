@@ -5,7 +5,7 @@
 //! routing failure and suspends the Message; here it is [`Dispatch::Unroutable`]
 //! and the Message is kept for retention.
 
-use path::expression::Truth;
+use expression::Truth;
 
 use crate::{Promoted, Subscriber, Subscription};
 

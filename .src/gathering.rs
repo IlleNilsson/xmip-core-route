@@ -152,7 +152,7 @@ use {
 mod tests {
     use super::*;
     use crate::Subscriber;
-    use path::expression::Expression;
+    use expression::Expression;
     use std::sync::atomic::Ordering;
 
     use super::counting::{Counting, message};

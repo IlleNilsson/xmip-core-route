@@ -24,8 +24,9 @@
 //!
 //! A filter is one line of Xmip's expression language, compiled once when
 //! the configuration is read and decided from the compiled tree for every
-//! Message (ADR-0066); the language is `xmip-core-path`'s (`path::expression`), and
-//! nothing here parses it.
+//! Message (ADR-0066); the language is `xmip-core-expression`'s, a capability
+//! routing uses directly (ADR-0066, amendment 2026-11-28), and nothing here
+//! parses it.
 //!
 //! What differs from BizTalk is four things, and none of them is the storage.
 //!
@@ -75,7 +76,7 @@ pub use subscription::{Subscriber, Subscription};
 mod tests {
     use super::*;
     use context::MessageContext;
-    use path::expression::{Expression, Truth};
+    use expression::{Expression, Truth};
     use xcore::ScalarValue;
 
     fn orders() -> Promoted {

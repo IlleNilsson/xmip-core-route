@@ -6,7 +6,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use path::expression::Expression;
+use expression::Expression;
 
 /// Who a matched Message goes to.
 ///
